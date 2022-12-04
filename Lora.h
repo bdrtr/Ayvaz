@@ -6,17 +6,19 @@
 #include <DallasTemperature.h>
 
 
-OneWire OneWire(2); // Kullanilacak dijital pin secildi.
+OneWire OneWire(5); // Kullanilacak dijital pin secildi.
 DallasTemperature DS18B20(&OneWire);
-DeviceAddress DS18B20_adres;
+DeviceAddress DS18B20_adres; // sıcaklık
 
-float santigrat, fahrenheit;
+
+float santigrat, fahrenheit; // sıcaklık
  
-SoftwareSerial mySerial(10, 11);
-LoRa_E22 AyvazLoRa(&mySerial);
  
-#define M0 7
-#define M1 6
+//SoftwareSerial mySerial(17, 16); // rx tx
+LoRa_E22 AyvazLoRa(&Serial2); // rx2 ve tx2 için
+ 
+#define M0 13
+#define M1 12
  
 #define Adres 1   //0--65000 arası bir değer girebilirsiniz. Diğer Modüllerden FARKLI olmalı
 #define Kanal 20    //Frekans değeri
@@ -26,7 +28,7 @@ LoRa_E22 AyvazLoRa(&mySerial);
  
 #define GonderilecekAdres 2
 
-int LENGTH = 27;
+int LENGTH = 31;
 
 
 // Batarya verileri
@@ -53,16 +55,28 @@ struct MessageBattery {
   byte bat20[5];
   byte SOC[5];
   byte SOH[5];
-} dataBattery;
-
-// Sicaklik verileri
-struct MessageTemperature{
   byte temp1[5];
   byte temp2[5];
   byte temp3[5];
   byte temp4[5];
   byte temp5[5];
+  byte temp6[5];
+  byte temp7[5];
+  byte temp8[5];
+  byte speed[5];
+} dataBattery;
+
+/*
+// Sicaklik verileri
+struct MessageTemperature{
+
 } dataTemp;
+*/
+/*
+struct MessageSpeed{
+  byte speed[9];  
+} dataSpeed;
+*/
 
 void initBatteryValues(int MSG[], int LENGTH){
 
@@ -88,35 +102,49 @@ void initBatteryValues(int MSG[], int LENGTH){
    *(float*)dataBattery.bat20 = MSG[19];
    *(float*)dataBattery.SOC = MSG[20];
    *(float*)dataBattery.SOH = MSG[21];
-   *(float*)dataTemp.temp1 = MSG[22];
-   *(float*)dataTemp.temp2 = MSG[23];
-   *(float*)dataTemp.temp3 = MSG[24];
-   *(float*)dataTemp.temp4 = MSG[25];
-   *(float*)dataTemp.temp5 = MSG[26];
+   *(float*)dataBattery.temp1 = MSG[22];
+   *(float*)dataBattery.temp2 = MSG[23];
+   *(float*)dataBattery.temp3 = MSG[24];
+   *(float*)dataBattery.temp4 = MSG[25];
+   *(float*)dataBattery.temp5 = MSG[26];
+   *(float*)dataBattery.temp6 = MSG[27];
+   *(float*)dataBattery.temp7 = MSG[28];
+   *(float*)dataBattery.temp8 = MSG[29];
+   *(float*)dataBattery.speed = MSG[30];
 }
  
 
  
 void sendWLora() {
  
+ DS18B20.begin();
+DS18B20.getAddress(DS18B20_adres, 0); // Sensor adresi atandi. 0, 1 adet sensor kullanildigi anlamindadir.
+DS18B20.setResolution(DS18B20_adres, 12); // Sensor cozunurlugu ayarlandi. Cozunurluk arttikca yavas calisir. (9,10,11,12) degerleri verilebilir.
+ 
   DS18B20.requestTemperatures(); // Sensore sicaklik istegi gonderiliyor.
   santigrat = DS18B20.getTempC(DS18B20_adres); // Sicaklik santigrat cinsinden okunuyor.
   fahrenheit = DS18B20.toFahrenheit(santigrat); // Sicaklik fahrenheit cinsine cevrildi.
+  Serial.print("sıcaklık \n");
+  Serial.print(santigrat);
+  Serial.print("\n");
 
   /* Ekrana Basiliyor */
-  Serial.print(santigrat);
-  Serial.println(" C");
-
   initBatteryValues(MSG, LENGTH);
 
   // Ilk olarak batarya verileri gonderiliyor.
   ResponseStatus rsBattery = AyvazLoRa.sendFixedMessage(0, GonderilecekAdres, Kanal, &dataBattery, sizeof(MessageBattery));
   Serial.println(rsBattery.getResponseDescription());
 
+/*
   // Sicaklik verileri gonderiliyor.
   ResponseStatus rsTemp = AyvazLoRa.sendFixedMessage(0, GonderilecekAdres, Kanal, &dataTemp, sizeof(MessageTemperature));
   Serial.println(rsTemp.getResponseDescription());
-  delay(1500);
+*/
+/*
+  ResponseStatus rsSpeed = AyvazLoRa.sendFixedMessage(0, GonderilecekAdres, Kanal, &dataSpeed, sizeof(MessageSpeed));
+  Serial.println(rsSpeed.getResponseDescription());
+  */
+  delay(300);
 }
 
 
@@ -136,11 +164,11 @@ void LoraE22Ayarlar() {
   configuration.CHAN = Kanal;
  
   //SEÇENEKLİ AYARLAR
-  configuration.SPED.airDataRate = AIR_DATA_RATE_010_24;  //Veri Gönderim Hızı 2,4 varsayılan
+  //configuration.SPED.airDataRate = AIR_DATA_RATE_010_24;  //Veri Gönderim Hızı 2,4 varsayılan
   //configuration.SPED.airDataRate = AIR_DATA_RATE_000_03;  //Veri Gönderim Hızı 0,3 En uzak Mesafe
-  //configuration.SPED.airDataRate = AIR_DATA_RATE_111_625; //Veri Gönderim Hızı 62,5 En Hızlı
- 
-  configuration.OPTION.subPacketSetting = SPS_240_00;  //veri paket büyüklüğü 240 byte Varsayılan
+  configuration.SPED.airDataRate = AIR_DATA_RATE_111_625; //Veri Gönderim Hızı 62,5 En Hızlı
+
+  configuration.OPTION.subPacketSetting = SPS_240_00;//veri paket büyüklüğü 240 byte Varsayılan
   //configuration.OPTION.subPacketSetting = SPS_064_10; //veri paket büyüklüğü 64 byte
   //configuration.OPTION.subPacketSetting = SPS_032_11;  //veri paket büyüklüğü 32 en hızlısı
  
