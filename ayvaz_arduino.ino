@@ -1,48 +1,48 @@
 int MSG[31],receive_data;
 
 #include "SoftwareSerial.h"
+#include "Nextion.h"
 //#include "Receiver.h"
 #include "Lora.h"
 #include "SpeedCalculator.h"
-//#include "TempCalculator.h"
+//#include <DallasTemperature.h>
+#include "TempCalculator.h"
 
 int Hall_effect_pin = 2;
+ 
+
 //float santigrat;
 
 void setup() {
 
   Serial.begin(9600); // bilgisayar
   Serial2.begin(9600); // loradan gelen 
-  //Serial1.begin(115200);
-
 
   //TEMP INITIALIZE
-  //DS18B20.begin();
-  //attachInterrupt(digitalPinToInterrupt(5),getTemp, CHANGE);
+    OneWire OneWire(5);  // Kullanilacak dijital pin secildi.
+  DallasTemperature DS18B20(&OneWire);
+  DeviceAddress DS18B20_adres;
   //TEMP END
+
   //LORA INITIALIZE
   pinMode(M0, OUTPUT);
   pinMode(M1, OUTPUT);
-
-
-  AyvazLoRa.begin();
-
-  // Lora ayarlari yapiliyor
+  FixajSS.begin();
+ 
   LoraE22Ayarlar();
-  
-  // Lora Modu (0,0 -> Lora calistirma modu)
+ 
   digitalWrite(M0, LOW);
   digitalWrite(M1, LOW);
  
-  Serial.println("Ayvaz 2023 - AKS\nbaşlıyoruz...");
-
+  delay(500);
+  Serial.println("başlıyoruz.. Fixaj.com");
   //LORA END
-  // HALL INITIALIZE
 
+  // HALL INITIALIZE
     pinMode(Hall_effect_pin,INPUT_PULLUP);
-    Timer1.initialize();
-    Timer1.attachInterrupt(speedCal);
-    attachInterrupt(digitalPinToInterrupt(Hall_effect_pin),speedInc, RISING);
+    Timer1.initialize();// kesme varsayılan olarak 1 saniye sayar
+    Timer1.attachInterrupt(speedCal); // bu fonksiyon taşmadan sonra çağrılır
+    attachInterrupt(digitalPinToInterrupt(Hall_effect_pin),speedInc, RISING); // hall effect yükselen kenarsa
   //HALL END
 
 }
@@ -60,14 +60,15 @@ void loop() {
   */
     Serial.print("speed \n");
     Serial.print(speed); 
-    Serial.print("\n"); 
-
+    Serial.print("\n");
+    getTemp();
+    
     for (int i=0;i<31;i++) {
       MSG[i]=i;
     }
     MSG[0] = speed;
     MSG[1] = santigrat;
-  
-  sendWLora();
+
+    sendLora();
 
 }
