@@ -4,7 +4,7 @@
 #include <SoftwareSerial.h>
  
 SoftwareSerial mySerial(10, 11);
-LoRa_E22 FixajSS(&mySerial);
+LoRa_E22 AYVAZ(&mySerial);
  
 #define M0 7
 #define M1 6
@@ -34,7 +34,7 @@ void sendLora() {
   *(int*)(data.btn3) = 1453;
   strcpy(data.konum, "Teknofest");
  
-  ResponseStatus rs = FixajSS.sendFixedMessage(highByte(GonderilecekAdres), lowByte(GonderilecekAdres), Kanal, &data, sizeof(Signal));
+  ResponseStatus rs = AYVAZ.sendFixedMessage(highByte(GonderilecekAdres), lowByte(GonderilecekAdres), Kanal, &data, sizeof(Signal));
   delay(2000);
 }
  
@@ -44,7 +44,7 @@ void LoraE22Ayarlar() {
   digitalWrite(M1, HIGH);
  
   ResponseStructContainer c;
-  c = FixajSS.getConfiguration();
+  c = AYVAZ.getConfiguration();
   Configuration configuration = *(Configuration*)c.data;
  
   //DEĞİŞEBİLEN AYARLAR
@@ -89,6 +89,6 @@ void LoraE22Ayarlar() {
   // configuration.TRANSMISSION_MODE.enableLBT = LBT_ENABLED;
  
   // Ayarları KAYDET ve SAKLA
-  ResponseStatus rs = FixajSS.setConfiguration(configuration, WRITE_CFG_PWR_DWN_SAVE);
+  ResponseStatus rs = AYVAZ.setConfiguration(configuration, WRITE_CFG_PWR_DWN_SAVE);
   c.close();
 }

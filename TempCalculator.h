@@ -19,7 +19,9 @@ void getTemp() {
 
   DS18B20.requestTemperatures();                 // Sensore sicaklik istegi gonderiliyor.
   santigrat = DS18B20.getTempC(DS18B20_adres);   // Sicaklik santigrat cinsinden okunuyor. // Sicaklik fahrenheit cinsine cevrildi.
+  /*
   Serial.print("sıcaklık \n");
   Serial.print(santigrat);
   Serial.print("\n");
+  */
 }
