@@ -1,5 +1,6 @@
-int MSG[27], receive_data;
-
+uint8_t receive_data;
+uint8_t buffer[30];
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          String ifade;
 #include "SoftwareSerial.h"
 #include "Nextion.h"
 #include "Receiver.h"
@@ -13,12 +14,12 @@ int Hall_effect_pin = 2;
 void setup() {
 
   Serial.begin(9600);   // bilgisayar
-  Serial3.begin(9600);  // STM32 için 3
+  Serial3.begin(115200);  // STM32 için 3
 
   //LORA INITIALIZE
   pinMode(M0, OUTPUT);
   pinMode(M1, OUTPUT);
-  AYVAZ.begin();
+  AyvazLoRa.begin();
 
   LoraE22Ayarlar();
 
@@ -38,17 +39,6 @@ void setup() {
 void loop() {
 
   receiver();
-  
-  /*
-  for (int a = 0; a < 27; a++) {
-    Serial.println(MSG[a]);
-  }
-  stm32 den gelen kodları yazdırma sekansı*/
-  delay(200);
-  getTemp();
-
-  MSG[0] = speed;
-  MSG[1] = santigrat;
-
-  sendLora();
+  Serial.println(" basladi :");
+  SendLora();
 }

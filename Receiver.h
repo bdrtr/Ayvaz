@@ -1,27 +1,22 @@
 
-void copyA(int* src, int* dst, int len) {
+void copyA(uint8_t* src, uint8_t* dst, uint8_t len) {
     memcpy(dst, src, sizeof(src[0])*len);
 }
 
 void receiver() {
-  int MSG2[27];
-
-  int i=0;
-    
-    receive_data = Serial3.read();
-    if (i==0) {
-      for (;i<27;i++) {
-        receive_data = Serial3.read();
-        MSG[i] = receive_data;
-      } 
-    }
-
-    /*
-    MSG[i] = receive_data;
-    Serial.print(i);
-    Serial.print("- ");
-    Serial.println(MSG[i]);
+  Serial.print("gel--");
+  Serial3.readBytes(buffer,30);
+  Serial3.flush();
+  delay(200);
   
-   copyA(MSG,MSG2,sizeof(MSG));
-   */
+  for (int i=0;i<30;i++) {
+    Serial.println(buffer[i]);
+  }
+  
+  //Serial.println(buffer[0]);
+  Serial.print("git--");
+  
+
+    //Serial.flush();
+  
 }
