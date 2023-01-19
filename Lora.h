@@ -74,8 +74,9 @@ struct Message {
 struct MessageData {
   byte speed[9];    // hiz
   byte temp[5];     // en yuksek sicaklik
-  byte SOC[5];      // batarya gerilimi
-  byte energy[5];   // kalan enerji
+  byte SOC[5];      // batarya gerilimi  // kalan enerji
+  byte engine_temp[5];
+  byte total_battery[5];
 } telemetryDatas;
 
 // En yuksek sicakligi bulan fonk.
@@ -87,7 +88,7 @@ int findHighTemperature(){
     if(temps[i] >= highTemperature) highTemperature = temps[i];
   }
 
-  return highTemperature;
+  return highTemperature*5/17;
 
 }
 
@@ -113,24 +114,25 @@ void initValues(uint8_t myMSG[]) {
   *(float*)data.bat17 = myMSG[16];
   *(float*)data.bat18 = myMSG[17];
   *(float*)data.bat19 = myMSG[18];
-  *(float*)data.bat20 = myMSG[19];
-  *(float*)data.SOH = myMSG[21];
-  *(float*)data.temp1 = myMSG[22];
-  *(float*)data.temp2 = myMSG[23];
-  *(float*)data.temp3 = myMSG[24];
-  *(float*)data.temp4 = myMSG[25];
-  *(float*)data.temp5 = myMSG[26];
+  *(float*)data.bat20 = myMSG[19]; //batarya
+  *(float*)data.temp1 = myMSG[20]; //
+  *(float*)data.temp2 = myMSG[21];
+  *(float*)data.temp3 = myMSG[22];
+  *(float*)data.temp4 = myMSG[23];//sıcaklık
+  *(float*)data.temp5 = myMSG[24];
+  *(float*)data.SOH = myMSG[25]; //
 
-  *(float*)telemetryDatas.speed = 20;
+  *(float*)telemetryDatas.speed = myMSG[26];
   *(float*)telemetryDatas.temp = findHighTemperature();
-  *(float*)telemetryDatas.SOC = 30;
-  *(float*)telemetryDatas.energy = 40;
+  *(float*)telemetryDatas.SOC = myMSG[27];
+  *(float*)telemetryDatas.engine_temp = myMSG[28];
+  *(float*)telemetryDatas.total_battery = myMSG[29];
 }
 
 void SendLora() {
   initValues(buffer);
   ResponseStatus rsData = AyvazLoRa.sendFixedMessage(0, GonderilecekAdres, Kanal, &telemetryDatas, sizeof(MessageData));
-  Serial.println(rsData.getResponseDescription());
+  //Serial.println(rsData.getResponseDescription());
 }
 
 /*
