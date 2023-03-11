@@ -5,6 +5,8 @@
 
 float santigrat, fahrenheit;
 
+// En yuksek sicakligi bulan fonk.
+
 
 void getTemp() {
 

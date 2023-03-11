@@ -10,9 +10,7 @@
 #include "LoRa_E22.h"
 #include <SoftwareSerial.h>
 #include <OneWire.h>
-#include <DallasTemperature.h>
-#include <TimerOne.h>
-#include <Nextion.h>
+
 
 SoftwareSerial mySerial(10, 11);  // LoRa 1 pinleri
 LoRa_E22 AyvazLoRa(&mySerial);  // LoRa 1 tanimlandi
@@ -29,17 +27,6 @@ LoRa_E22 AyvazLoRa(&mySerial);  // LoRa 1 tanimlandi
 #define Netid 63  //0--65000 arası bir değer girebilirsiniz. Diğer Modüllerle AYNI olmalı.
 
 #define GonderilecekAdres 3  // Target LoRa
-// Nextion Degiskenleri
-/*
-NexNumber nex_hiz_txt = NexNumber(0, 12, "hiz_txt");
-NexNumber nex_sarj_yuzde = NexNumber(0, 14, "sarj_yuzde");
-NexNumber nex_sarj_km_txt = NexNumber(0, 13, "sarj_km_txt");
-NexNumber nex_bat_seviye_txt = NexNumber(0, 11, "bat_seviye_txt");
-NexGauge nex_hiz_cubuk = NexGauge(0, 1, "hiz_cubuk");
-NexGauge nex_sarj_cubuk = NexGauge(0, 2, "sarj_cubuk");
-NexProgressBar nex_bat_doluluk = NexProgressBar(0, 9, "bat_doluluk");
-*/
-
 
 struct Message {
   byte bat1[5];
@@ -70,16 +57,6 @@ struct Message {
   byte temp5[5];
 } data;
 
-// LoRa'ya gonderilecek
-struct MessageData {
-  byte speed[9];    // hiz
-  byte temp[5];     // en yuksek sicaklik
-  byte SOC[5];      // batarya gerilimi  // kalan enerji
-  byte engine_temp[5];
-  byte total_battery[5];
-} telemetryDatas;
-
-// En yuksek sicakligi bulan fonk.
 int findHighTemperature(){
 
   int highTemperature = 0;
@@ -91,6 +68,17 @@ int findHighTemperature(){
   return highTemperature*5/17;
 
 }
+
+// LoRa'ya gonderilecek
+struct MessageData {
+  byte speed[9];    // hiz
+  byte temp[5];     // en yuksek sicaklik
+  byte SOC[5];      // batarya gerilimi  // kalan enerji
+  byte engine_temp[5];
+  byte total_battery[5];
+} telemetryDatas;
+
+
 
 // STM'den alinan veriler struct icine yerlestirilerek paketler hazirlaniyor.
 void initValues(uint8_t myMSG[]) {
@@ -116,14 +104,14 @@ void initValues(uint8_t myMSG[]) {
   *(float*)data.bat19 = myMSG[18];
   *(float*)data.bat20 = myMSG[19]; //batarya
   *(float*)data.temp1 = myMSG[20]; //
-  *(float*)data.temp2 = myMSG[21];
-  *(float*)data.temp3 = myMSG[22];
-  *(float*)data.temp4 = myMSG[23];//sıcaklık
-  *(float*)data.temp5 = myMSG[24];
+  *(float*)data.temp2 = myMSG[20];
+  *(float*)data.temp3 = myMSG[20];
+  *(float*)data.temp4 = myMSG[20];//sıcaklık
+  *(float*)data.temp5 = myMSG[20];
   *(float*)data.SOH = myMSG[25]; //
 
   *(float*)telemetryDatas.speed = myMSG[26];
-  *(float*)telemetryDatas.temp = findHighTemperature();
+  *(float*)telemetryDatas.temp = myMSG[20];
   *(float*)telemetryDatas.SOC = myMSG[27];
   *(float*)telemetryDatas.engine_temp = myMSG[28];
   *(float*)telemetryDatas.total_battery = myMSG[29];
@@ -131,7 +119,7 @@ void initValues(uint8_t myMSG[]) {
 
 void SendLora() {
   initValues(buffer);
-  ResponseStatus rsData = AyvazLoRa.sendFixedMessage(0, GonderilecekAdres, Kanal, &telemetryDatas, sizeof(MessageData));
+  ResponseStatus rsData = AyvazLoRa.sendFixedMessage(0, GonderilecekAdres, Kanal, &telemetryDatas, sizeof(MessageData));  
   //Serial.println(rsData.getResponseDescription());
 }
 
