@@ -3,7 +3,6 @@
 // Nextion Degiskenleri
 
 //NexNumber mot_sic_txt = NexNumber(0, 14, "mot_sic_txt");
-
 //NexGauge nex_hiz_cubuk = NexGauge(0, 1, "hiz_cubuk");
 /*
 NexNumber nex_sarj_yuzde = NexNumber(0, 14, "sarj_yuzde");

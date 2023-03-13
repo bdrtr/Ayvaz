@@ -2,7 +2,8 @@ uint8_t buffer[30]; // stm32 den gelen 26 bayte'lık veri ilk 25 değerde saklan
 uint32_t toplam=0; // bataryadan gelen verilerin toplamı
 uint32_t batarya_toplam=0; // bataryadan gelen max 255 değerli verinin 5 volt(değer)'a indirgenmesi
 uint32_t time=0;
-char myString[] ="";
+char MyString[]="";
+char Bat_prog[]="";
 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           String ifade;
 
@@ -14,10 +15,23 @@ char myString[] ="";
 #include "SpeedCalculator.h"
 #include "TempCalculator.h"
 
-int Hall_effect_pin = 2; //hal effetct için harici kesme pini
+int Hall_effect_pin = 2; //hal effect için harici kesme pini
+
+//NEXTION VERIABLES
 NexNumber mot_sic_txt = NexNumber(0, 14, "mot_sic_txt");
 NexNumber nex_hiz_txt = NexNumber(0, 11, "hiz_txt");
 NexGauge nex_hiz_cubuk = NexGauge(0, 1, "hiz_cubuk");
+NexNumber sar_km_txt = NexNumber(0, 12, "sar_km_txt");
+NexGauge sar_cubuk = NexGauge(0, 2, "sar_cubuk");
+NexNumber sarj_yuzde = NexNumber(0, 13, "sarj_yuzde");
+NexNumber bat_sic_txt = NexNumber(0, 15, "bat_sic_txt");
+NexNumber bat_seviye_txt = NexNumber(0, 10, "bat_seviye_txt");
+NexProgressBar bat_doluluk = NexProgressBar(0, 8, "bat_doluluk");
+NexPicture mot_sic_u_txt = NexPicture(0, 18, "mot_sic_u_txt");
+NexPicture bat_sarj_u_txt = NexPicture(0, 17, "bat_sarj_u_txt");
+NexPicture bat_sic_u_txt = NexPicture(0, 16, "bat_sic_u_txt");
+NexNumber nex_soc = NexNumber(1, 21, "soc");
+//
 
 void setup() {
   
@@ -25,6 +39,13 @@ void setup() {
   Serial3.begin(115200);  // STM32 için 3
   nexInit();
 
+  //SDCARD ADD TITLE
+  File file = SD.open("copyTelemetri.txt", FILE_WRITE);
+  file.println("time ,speed, temp, soc, engine_temp, total_battery");
+  file.close();
+  ///
+
+  
   //LORA INITIALIZE
   pinMode(M0, OUTPUT);
   pinMode(M1, OUTPUT);
@@ -70,36 +91,39 @@ void Soc() {
 void saveSDCard() {
   time = millis(); //çalışmaya başladığından bir itibar o anki milisaniye
   File file = SD.open("copyTelemetri.txt", FILE_WRITE); //SDCART'daki bu dosyaya kaydet
-  /*
-  file.print(time);
-  file.print(*(float*)telemetryDatas.speed);
-  file.print(", ");
-  file.print(*(float*)telemetryDatas.temp);
-  file.print(", ");
-  file.print(*(float*)telemetryDatas.SOC);
-  file.print(", ");
-  file.print(*(float*)telemetryDatas.engine_temp);
-  file.print(", ");
-  file.print(*(float*)telemetryDatas.total_battery);
-  file.print("\n");
-  file.close();
 
-  */
-  sprintf(myString,"timer=%d speed=%f, temp=%f, soc=%f, engine_temp=%f, total_bat=%f \n",
+  sprintf(myString,"%u %f, %f, %f, %f, %f \n",
                                                                                    time,
-                                                                                   *(float*)telemetryDatas.speed,
-                                                                                   *(float*)telemetryDatas.temp,
-                                                                                   *(float*)telemetryDatas.SOC,
-                                                                                   *(float*)telemetryDatas.engine_temp,
-                                                                                   *(float*)telemetryDatas.total_battery
+                                                                                   speed,
+                                                                                   santigrat,
+                                                                                   buffer[27],
+                                                                                   santigrat,
+                                                                                   batarya_toplam
                                                                                    );
   file.print(myString);
   file.close();
-  Serial.println(myString);
+  //Serial.println(myString);
 }
 
-void loop() {
-  //saveSDCard();  
+void sendNextion() {
+  mot_sic_txt.setValue(santigrat);
+  nex_hiz_txt.setValue(speed);
+  nex_hiz_cubuk.setValue(speed);
+  bat_sic_txt.setValue(buffer[20]);
+  bat_doluluk.setValue(buffer[27]);
+  bat_seviye_txt.setValue(buffer[27]);
+  sarj_yuzde.setValue(buffer[27]);
+  nex_soc.setValue(buffer[27]);
+  
+  for (int i=0;i<20;i++) {
+    double num = buffer[i]/5;
+    sprintf(myString,"b%d.val=%d%d",i+1,int(num)/10, (int(num)%10));
+    sendCommand(myString);
+  }
+  
+}
+
+void loop() { 
   receiver(); //stm32 den verilen alınması
   Soc(); //batarya değerinin hesaplanması
   getTemp(); // sıcaklık verilerinin alınması 
@@ -107,10 +131,11 @@ void loop() {
   buffer[26] = speed; //hızın gönderilmesi
   buffer[28] = santigrat;
   buffer[29] = batarya_toplam;
-  mot_sic_txt.setValue(santigrat);
-  nex_hiz_txt.setValue(buffer[20]);
+  //Serial.println(buffer[19]);
   //Serial.println(buffer[20]);
   //Serial.println(buffer[21]);
-  nex_hiz_cubuk.setValue(speed);
-  SendLora(); //lora'ya veri gönderilmesi
+  sendNextion();
+  //SendLora(); //lora'ya veri gönderilmesi
+  //saveSDCard(); 
+  
 }
