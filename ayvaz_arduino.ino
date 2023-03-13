@@ -2,7 +2,7 @@ uint8_t buffer[30]; // stm32 den gelen 26 bayte'lık veri ilk 25 değerde saklan
 uint32_t toplam=0; // bataryadan gelen verilerin toplamı
 uint32_t batarya_toplam=0; // bataryadan gelen max 255 değerli verinin 5 volt(değer)'a indirgenmesi
 uint32_t time=0;
-char MyString[]="";
+char myString[]="";
 char Bat_prog[]="";
 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           String ifade;
@@ -31,6 +31,7 @@ NexPicture mot_sic_u_txt = NexPicture(0, 18, "mot_sic_u_txt");
 NexPicture bat_sarj_u_txt = NexPicture(0, 17, "bat_sarj_u_txt");
 NexPicture bat_sic_u_txt = NexPicture(0, 16, "bat_sic_u_txt");
 NexNumber nex_soc = NexNumber(1, 21, "soc");
+NexGauge sarj_cubuk = NexGauge(0,2,"sarj_cubuk");
 //
 
 void setup() {
@@ -114,9 +115,9 @@ void sendNextion() {
   bat_seviye_txt.setValue(buffer[27]);
   sarj_yuzde.setValue(buffer[27]);
   nex_soc.setValue(buffer[27]);
-  
+  sarj_cubuk.setValue(map(buffer[27],0,100,360,180));
   for (int i=0;i<20;i++) {
-    double num = buffer[i]/5;
+    double num = buffer[i]/5.05;
     sprintf(myString,"b%d.val=%d%d",i+1,int(num)/10, (int(num)%10));
     sendCommand(myString);
   }
@@ -131,11 +132,8 @@ void loop() {
   buffer[26] = speed; //hızın gönderilmesi
   buffer[28] = santigrat;
   buffer[29] = batarya_toplam;
-  //Serial.println(buffer[19]);
-  //Serial.println(buffer[20]);
-  //Serial.println(buffer[21]);
   sendNextion();
-  //SendLora(); //lora'ya veri gönderilmesi
+  SendLora(); //lora'ya veri gönderilmesi
   //saveSDCard(); 
   
 }

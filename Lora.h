@@ -131,7 +131,7 @@ void initNextion(){
     toplam += MSG[i];
   }
   int sarj_yuzde = toplam/20;
-  int derece = map(sarj_yuzde,0,100,360,180);
+  
   //nex_sarj_cubuk.setValue((uint32_t)derece);
   //nex_sarj_yuzde.setValue((uint32_t)sarj_yuzde);
   //nex_bat_seviye_txt.setValue((uint32_t)sarj_yuzde);
